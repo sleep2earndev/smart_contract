@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import {Test, console} from "forge-std/Test.sol";
 import {TokenNFT} from "../src/NFTToken.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 
 contract TokenNftTest is Test {
