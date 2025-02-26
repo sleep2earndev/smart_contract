@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
 
-import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import {ERC721URIStorage, ERC721} from "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
 
 struct NFTListing {
     uint256 price;
@@ -69,6 +69,14 @@ contract NFTMarket is ERC721URIStorage, Ownable {
         delete _listings[tokenId];
 
         require(ownerOf(tokenId) == msg.sender, "Ownership has changed unexpectedly");
+    }
+
+        // Fungsi untuk mengirim ETH ke user
+    function rewardUser(address payable _user, uint256 _amount) external onlyOwner {
+        require(address(this).balance >= _amount, "Not enough ETH in contract");
+
+        (bool success, ) = _user.call{value: _amount}("");
+        require(success, "ETH transfer failed");
     }
 
     // ✅ Tarik dana dari kontrak
