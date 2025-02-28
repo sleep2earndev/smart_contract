@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.22;
+pragma solidity ^0.8.28;
 
-import {ERC721URIStorage, ERC721} from "../lib/openzeppelin-contracts/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "../lib/openzeppelin-contracts/contracts/access/Ownable.sol";
+import {ERC721URIStorage, ERC721} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 struct NFTListing {
     uint256 price;
@@ -51,8 +51,13 @@ contract NFTMarket is ERC721URIStorage, Ownable {
         // Transfer NFT ke pembeli
         _transfer(listing.seller, msg.sender, tokenId);
         
-        // Bayar penjual
-        payable(listing.seller).transfer(listing.price * 95 / 100);
+        // Bayar penjual (95% dari harga)
+        payable(listing.seller).transfer(listing.price);
+
+        // Kembalikan kelebihan dana ke pembeli
+        if (msg.value > listing.price) {
+            payable(msg.sender).transfer(msg.value - listing.price);
+        }
 
         // Hapus listing NFT
         delete _listings[tokenId];
@@ -71,7 +76,7 @@ contract NFTMarket is ERC721URIStorage, Ownable {
         require(ownerOf(tokenId) == msg.sender, "Ownership has changed unexpectedly");
     }
 
-        // Fungsi untuk mengirim ETH ke user
+    // Fungsi untuk mengirim ETH ke user
     function rewardUser(address payable _user, uint256 _amount) external onlyOwner {
         require(address(this).balance >= _amount, "Not enough ETH in contract");
 
@@ -88,7 +93,18 @@ contract NFTMarket is ERC721URIStorage, Ownable {
     }
 
     // ✅ Cek apakah NFT terdaftar
-    function getListing(uint256 tokenId) public view returns (NFTListing memory) {
-        return _listings[tokenId];
+    function getListing(uint256 tokenId) public view returns (uint256 price, address seller) {
+        NFTListing memory listing = _listings[tokenId];
+        return (listing.price, listing.seller);
     }
+
+    function getListings() public view returns (NFTListing[] memory) {
+    NFTListing[] memory listings = new NFTListing[](_ids);
+    for (uint256 i = 1; i <= _ids; i++) {
+        if (_listings[i].price > 0) {
+            listings[i - 1] = _listings[i];
+        }
+    }
+    return listings;
+}
 }
